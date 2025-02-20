@@ -2,9 +2,9 @@
 name = "Photos"
 version = "0.1.0"
 description = "Effortlessly browse, sort, and manage your photo collection right on your device. Photos from Æsir Dev delivers the intuitive organization of cloud services with the peace of mind that comes from keeping your memories safely stored on your own hardware."
-authors = ["you"]
-license = ""
-repository = ""
+authors = ["Æsir Dev"]
+license = "MIT"
+repository = "https://codeberg.org/aesir/photos"
 edition = "2021"
 rust-version = "1.77.2"
 
@@ -20,6 +20,14 @@ tauri-build = { version = "2.0.4", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-log = "0.4"
 tauri = { version = "2.2.4", features = [] }
+log = "0.4"
 tauri-plugin-log = "2.0.0-rc"
+sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio", "macros", "time", "chrono", "tls-native-tls"] }
+sea-orm = { version = "1.1.1", features = ["sqlx-sqlite", "runtime-tokio-native-tls", "macros"] }
+tauri-plugin-fs = "2.2.0"
+async-std = { version = "1.13.0", features = ["attributes", "tokio1"] }
+sea-orm-migration = { version = "1.1.5", features = ["runtime-tokio-rustls", "sqlx-sqlite"] }
+
+[package.metadata.bin]
+sea-orm-cli = { version = "0.12.15" }
