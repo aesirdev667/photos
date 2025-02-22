@@ -29,11 +29,7 @@ pub fn run() {
 
             Ok(())
         })
-
-        .invoke_handler(generate_handler![
-            commands::library::library_open,
-        ])
-
+        .invoke_handler(generate_handler![commands::library::library_open,])
         .run(generate_context!())
         .expect("error while running tauri application");
 }
