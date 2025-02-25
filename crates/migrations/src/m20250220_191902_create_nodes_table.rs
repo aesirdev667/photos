@@ -86,7 +86,7 @@ enum Nodes {
 }
 
 #[derive(Iden, EnumIter)]
-pub enum NodeType {
+enum NodeType {
     #[iden = "file"]
     File,
     #[iden = "directory"]

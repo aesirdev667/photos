@@ -5,7 +5,7 @@ pub enum Error {
     #[error("failed to parse as string: {0}")]
     Utf8(#[from] std::str::Utf8Error),
     #[error(transparent)]
-    DbErr(#[from] sea_orm::DbErr),
+    DbErr(#[from] migrations::DbErr),
     #[error(transparent)]
     TryFromIntError(#[from] std::num::TryFromIntError),
 }

@@ -1,0 +1,16 @@
+[package]
+name = "stores"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+chrono = "0.4.39"
+entities = { path = "../entities" }
+migrations = { path = "../migrations" }
+paste = "1.0.15"
+sea-orm = { version = "1.1.5", features = ["sqlx-sqlite", "runtime-tokio-native-tls", "macros"] }
+
+[dev-dependencies]
+serde_json = "1.0.139"
+tokio = { version = "1.43.0", features = ["test-util", "macros"] }

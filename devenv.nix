@@ -1,6 +1,7 @@
 { pkgs, ... }:
 {
-  env.TAURI_FRONTEND_PATH = "src-ui/";
+  env.TAURI_APP_PATH = "apps/tauri/";
+  env.TAURI_FRONTEND_PATH = "apps/ui/";
 
   languages.javascript.enable = true;
   languages.javascript.bun.enable = true;
@@ -20,15 +21,15 @@
 
   scripts.nuxi.exec = ''
     (
-      # change working directory to git toplevel
-      cd "$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)/src-ui"
+      # change working directory to git toplevel/apps/ui
+      cd "$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)/apps/ui"
       # execute command from here
       ${pkgs.lib.getExe pkgs.unstable.bun} x nuxi "$@"
     )
   '';
 
   scripts."sea-orm-cli".exec = ''
-    ROOT="$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)/src-tauri"
+    ROOT="$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)/apps/tauri"
     APP_ID=$(cat "$ROOT/tauri.conf.json" | ${pkgs.lib.getExe pkgs.jq} -r .identifier)
     DB_NAME=photos.db
 
@@ -46,4 +47,13 @@
 
     DATABASE_URL="sqlite://$DB_PATH?mode=rwc" ${pkgs.lib.getExe pkgs.sea-orm-cli} "$@"
   '';
+
+  # TODO: add a script to generate code coverage
+  # scripts.coverage.exec = ''
+  #   (
+  #     # change working directory to git toplevel
+  #     cd "$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)"
+  #     docker run --rm -itv "$(pwd):/volume" xd009642/tarpaulin sh -c 'cargo tarpaulin "$@"'
+  #   )
+  # '';
 }

@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.aesirdev.photos",
   "build": {
-    "frontendDist": "../src-ui/dist",
+    "frontendDist": "../ui/dist",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "bun --cwd=../src-ui dev",
-    "beforeBuildCommand": "bun --cwd=../src-ui generate"
+    "beforeDevCommand": "bun --cwd=../ui dev",
+    "beforeBuildCommand": "bun --cwd=../ui generate"
   },
   "app": {
     "windows": [
