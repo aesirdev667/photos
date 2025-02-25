@@ -55,7 +55,8 @@
       cd "$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)"
       # update and apply patch to xtaskops
       ${pkgs.lib.getExe pkgs.git} submodule update --remote vendors/xtaskops
-      ${pkgs.lib.getExe pkgs.git} apply vendors/patches/xtaskops_ci_args.patch
+      cd "vendors/xtaskops"
+      ${pkgs.lib.getExe pkgs.git} apply ../patches/xtaskops_ci_args.patch
     )
   '';
 
