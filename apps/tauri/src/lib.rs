@@ -1,11 +1,13 @@
-use tauri::{async_runtime, generate_context, generate_handler, Builder, Manager};
+use tauri::{Builder, Manager, async_runtime, generate_context, generate_handler};
 
 mod commands;
 mod error;
 mod state;
 
+#[allow(clippy::missing_panics_doc)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[allow(clippy::large_stack_frames)]
     Builder::default()
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -17,7 +19,7 @@ pub fn run() {
             }
 
             async_runtime::block_on(async {
-                let state = state::AppState::new(app)
+                let state = state::App::new(app)
                     .await
                     .expect("failed to initialize state");
 
@@ -26,7 +28,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(generate_handler![commands::library::library_open])
+        .invoke_handler(generate_handler![commands::library_open])
         .run(generate_context!())
         .expect("error while running tauri application");
 }

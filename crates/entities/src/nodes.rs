@@ -1,5 +1,5 @@
 use sea_orm::entity::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "nodes")]
@@ -48,7 +48,7 @@ pub enum Relation {
     Children,
 }
 
-impl Related<Entity> for Entity {
+impl Related<Self> for Entity {
     fn to() -> RelationDef {
         Relation::Children.def()
     }

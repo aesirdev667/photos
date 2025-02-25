@@ -1,14 +1,17 @@
+
 use std::{collections::VecDeque, fs, path::PathBuf};
 
 use crate::error::Error;
-use crate::state::AppState;
+use crate::state::App;
 
 use entities::nodes::{Model as Node, NodeType};
 use stores::nodes::NodeStore;
 
+/// Module name repitition allowed here because the UI calls it with `library_open`.
+#[allow(clippy::module_name_repetitions)]
 #[tauri::command]
-pub async fn library_open(path: String, state: tauri::State<'_, AppState>) -> Result<Node, Error> {
-    println!("command `library::open` called");
+pub async fn library_open(path: String, state: tauri::State<'_, App>) -> Result<Node, Error> {
+    println!("command `library_open` called");
 
     let store = NodeStore::new(state.db());
     let mut root_node = store.with_children(path.clone()).await?;
@@ -18,7 +21,7 @@ pub async fn library_open(path: String, state: tauri::State<'_, AppState>) -> Re
         root_node = store.find_by_path(path.clone()).await?;
 
         if root_node.is_none() {
-            eprintln!("Path `{}` not found.", path);
+            eprintln!("Path `{path}` not found.");
             return Err(Error::Io(std::io::Error::other("Path not found")));
         }
     }

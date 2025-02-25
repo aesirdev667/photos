@@ -1,11 +1,13 @@
 use sea_orm::{EnumIter, Iterable};
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::prelude::*;
+use sea_orm_migration::schema::{enumeration, integer, integer_null, pk_auto, string, timestamp};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
+    #[allow(elided_lifetimes_in_paths)]
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -56,6 +58,7 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 
+    #[allow(elided_lifetimes_in_paths)]
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .drop_index(Index::drop().name("idx-nodes-path").to_owned())

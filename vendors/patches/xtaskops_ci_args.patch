@@ -1,0 +1,70 @@
+[33mdiff --git a/xtaskops/src/tasks.rs b/xtaskops/src/tasks.rs[m
+[33mindex 4286e0c..c01b225 100644[m
+[33m--- a/xtaskops/src/tasks.rs[m
+[33m+++ b/xtaskops/src/tasks.rs[m
+[35m@@ -29,7 +29,7 @@[m [mpub struct CI {[m
+ [m
+     /// turn all clippy lints on: pedantic, nursery, 2018-idioms[m
+     /// default: on[m
+[31m-    #[builder(default = "true")][m
+[32m+[m[32m    #[builder(default = "false")][m
+     pub clippy_max: bool,[m
+ }[m
+ [m
+[35m@@ -72,8 +72,11 @@[m [mimpl CIBuilder {[m
+ /// # Errors[m
+ /// Fails if any command fails[m
+ ///[m
+[31m-pub fn ci() -> AnyResult<()> {[m
+[31m-    CIBuilder::default().run()[m
+[32m+[m[32mpub fn ci(nightly: bool, clippy_max: bool) -> AnyResult<()> {[m
+[32m+[m[32m    CIBuilder::default()[m
+[32m+[m[32m        .nightly(nightly)[m
+[32m+[m[32m        .clippy_max(clippy_max)[m
+[32m+[m[32m        .run()[m
+ }[m
+ [m
+ ///[m
+[35m@@ -260,7 +263,7 @@[m [mpub fn install() -> AnyResult<()> {[m
+ /// This function will return an error if any command failed[m
+ #[cfg(feature = "clap")][m
+ pub fn main() -> AnyResult<()> {[m
+[31m-    use clap::{AppSettings, Arg, Command};[m
+[32m+[m[32m    use clap::{AppSettings, Arg, ArgAction, Command};[m
+     let cli = Command::new("xtask")[m
+         .setting(AppSettings::SubcommandRequiredElseHelp)[m
+         .subcommand([m
+[35m@@ -273,7 +276,23 @@[m [mpub fn main() -> AnyResult<()> {[m
+             ),[m
+         )[m
+         .subcommand(Command::new("vars"))[m
+[31m-        .subcommand(Command::new("ci"))[m
+[32m+[m[32m        .subcommand([m
+[32m+[m[32m            Command::new("ci")[m
+[32m+[m[32m                .arg([m
+[32m+[m[32m                    Arg::new("nightly")[m
+[32m+[m[32m                        .short('n')[m
+[32m+[m[32m                        .long("nightly")[m
+[32m+[m[32m                        .help("run with nightly")[m
+[32m+[m[32m                        .action(ArgAction::SetTrue),[m
+[32m+[m[32m                )[m
+[32m+[m[32m                .arg([m
+[32m+[m[32m                    Arg::new("clippy-max")[m
+[32m+[m[32m                        .short('m')[m
+[32m+[m[32m                        .long("clippy-max")[m
+[32m+[m[32m                        .help("turn all clippy lints on: pedantic, nursery, 2018-idioms")[m
+[32m+[m[32m                        .action(ArgAction::SetTrue),[m
+[32m+[m[32m                ),[m
+[32m+[m[32m        )[m
+         .subcommand(Command::new("powerset"))[m
+         .subcommand([m
+             Command::new("bloat-deps").arg([m
+[35m@@ -305,7 +324,7 @@[m [mpub fn main() -> AnyResult<()> {[m
+             println!("root: {root:?}");[m
+             Ok(())[m
+         }[m
+[31m-        Some(("ci", _)) => crate::tasks::ci(),[m
+[32m+[m[32m        Some(("ci", sm)) => crate::tasks::ci(sm.get_flag("nightly"), sm.get_flag("clippy-max")),[m
+         Some(("docs", _)) => crate::tasks::docs(),[m
+         Some(("powerset", _)) => crate::tasks::powerset(),[m
+         Some(("bloat-deps", sm)) => crate::tasks::bloat_deps([m

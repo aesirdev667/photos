@@ -12,10 +12,13 @@ pub struct NodeStore {
 }
 
 impl NodeStore {
+    #[must_use]
     pub fn new(db: &DatabaseConnection) -> Self {
         Self { db: db.clone() }
     }
 
+    /// # Errors
+    /// Errors on database issues.
     pub async fn find_by_path(&self, path: String) -> Result<Option<nodes::Model>, DbErr> {
         Node::find()
             .filter(nodes::Column::Path.eq(path))
@@ -23,11 +26,13 @@ impl NodeStore {
             .await
     }
 
+    /// # Errors
+    /// Errors on database issues.
     pub async fn with_children(&self, path: String) -> Result<Option<nodes::Model>, DbErr> {
         let all_nodes: Vec<nodes::Model> = Node::find()
             .from_raw_sql(Statement::from_sql_and_values(
                 self.db.get_database_backend(),
-                r#"
+                r"
                 WITH RECURSIVE NodeTree AS (
                     SELECT id, path, size, node_type, parent_id, created_at, updated_at
                     FROM nodes
@@ -41,7 +46,7 @@ impl NodeStore {
                 )
                 SELECT *
                 FROM NodeTree;
-                "#,
+                ",
                 vec![path.clone().into()],
             ))
             .all(&self.db)
@@ -79,8 +84,7 @@ impl NodeStore {
         dir_ids.sort_by_key(|id| {
             node_map
                 .get(id)
-                .map(|node| node.path.matches('/').count())
-                .unwrap_or(0)
+                .map_or(0, |node| node.path.matches('/').count())
         });
         dir_ids.reverse();
 
@@ -97,6 +101,8 @@ impl NodeStore {
         Ok(node_map.values().find(|v| v.path == path).cloned())
     }
 
+    /// # Errors
+    /// Errors on database issues.
     pub async fn create(
         &self,
         path: String,
@@ -105,10 +111,10 @@ impl NodeStore {
         parent_id: Option<i32>,
     ) -> Result<nodes::Model, DbErr> {
         let new_node = nodes::ActiveModel {
-            path: Set(path.to_owned()),
-            size: Set(size.to_owned()),
-            node_type: Set(node_type.to_owned()),
-            parent_id: Set(parent_id.to_owned()),
+            path: Set(path.clone()),
+            size: Set(size),
+            node_type: Set(node_type.clone()),
+            parent_id: Set(parent_id),
             updated_at: Set(chrono::Utc::now()),
             created_at: Set(chrono::Utc::now()),
             ..Default::default()

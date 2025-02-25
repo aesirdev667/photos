@@ -1,22 +1,20 @@
-use std::{env, path::PathBuf, sync::Arc};
-use tauri::{App, Manager};
+use std::{path::PathBuf, sync::Arc};
 
 use migrations::{DatabaseConnection, DbErr, Migrator, MigratorTrait};
 
 #[derive(Default)]
-pub struct AppState {
+pub struct App {
     db: Arc<DatabaseConnection>,
 }
 
-impl AppState {
-    pub async fn new(app: &App) -> Result<Self, DbErr> {
+impl App {
+    #[allow(clippy::future_not_send)]
+    pub async fn new(app: &tauri::App) -> Result<Self, DbErr> {
         let db_path = Self::get_db_path(app);
         let db_url = format!("sqlite://{}?mode=rwc", db_path.display());
 
-        env::set_var("DATABASE_URL", db_url.clone());
-
         println!("-----------------------------------------------");
-        println!("Initializing database at: {:?}", db_path);
+        println!("Initializing database at: {db_path:?}");
 
         let connection = Migrator::connection(db_url).await?;
 
@@ -35,7 +33,7 @@ impl AppState {
     }
 
     #[cfg(test)]
-    fn get_db_path(_app: &App) -> PathBuf {
+    fn get_db_path(_app: &tauri::App) -> PathBuf {
         use tempfile::tempdir;
 
         static TEMP_DIR: std::sync::OnceLock<tempfile::TempDir> = std::sync::OnceLock::new();
@@ -44,8 +42,9 @@ impl AppState {
     }
 
     #[cfg(not(test))]
-    fn get_db_path(app: &App) -> PathBuf {
+    fn get_db_path(app: &tauri::App) -> PathBuf {
         use std::fs;
+        use tauri::Manager;
 
         let app_dir = app.path().app_data_dir().expect("failed to get app dir");
         fs::create_dir_all(&app_dir).expect("failed to create app dir");

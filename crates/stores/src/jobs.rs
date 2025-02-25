@@ -13,12 +13,15 @@ pub struct JobStore {
 }
 
 impl JobStore {
+    #[must_use]
     pub fn new(db: &DatabaseConnection) -> Self {
         Self {
             db: Arc::new(db.clone()),
         }
     }
 
+    /// # Errors
+    /// Errors on database issues.
     pub async fn find_by_id(&self, id: i32) -> Result<Option<jobs::Model>, DbErr> {
         Job::find()
             .filter(jobs::Column::Id.eq(id))
@@ -26,11 +29,13 @@ impl JobStore {
             .await
     }
 
+    /// # Errors
+    /// Errors on database issues.
     pub async fn enqueue(&self, job_type: &str, payload: String) -> Result<jobs::Model, DbErr> {
         let job = jobs::ActiveModel {
-            job_type: Set(job_type.to_string().to_owned()),
-            status: Set(jobs::JobStatus::Pending.to_owned()),
-            payload: Set(payload.to_owned()),
+            job_type: Set(job_type.to_string()),
+            status: Set(jobs::JobStatus::Pending.clone()),
+            payload: Set(payload.clone()),
             updated_at: Set(Utc::now()),
             created_at: Set(Utc::now()),
             error: Set(None),
@@ -40,19 +45,30 @@ impl JobStore {
         Job::insert(job).exec_with_returning(&*self.db).await
     }
 
+    /// # Errors
+    /// Errors on database issues.
+    /// # Panics
+    /// Shouldn't panic because we check if `job.is_none` before we unwrap.
     pub async fn update_status(
         &self,
         job_id: i32,
         status: jobs::JobStatus,
         error: Option<String>,
     ) -> Result<jobs::Model, DbErr> {
-        let job: Option<jobs::Model> = Job::find_by_id(job_id).one(&*self.db).await?;
+        let job = Job::find_by_id(job_id).one(&*self.db).await?;
+
+        if job.is_none() {
+            return Err(DbErr::Custom(format!("Can't find job with id '{job_id}'")));
+        }
+
         let mut job: jobs::ActiveModel = job.unwrap().into();
 
-        job.status = Set(status.to_owned());
+        job.status = Set(status.clone());
         job.updated_at = Set(Utc::now());
-        job.error = Set(error.to_owned());
+        job.error = Set(error.clone());
 
-        Ok(job.update(&*self.db).await?)
+        let job = job.update(&*self.db).await?;
+
+        Ok(job)
     }
 }

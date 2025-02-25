@@ -7,8 +7,9 @@
   languages.javascript.bun.enable = true;
   languages.javascript.bun.package = pkgs.unstable.bun;
   languages.rust.enable = true;
+  languages.rust.channel = "beta";
 
-  packages = with pkgs; [ cargo-tauri sea-orm-cli ];
+  packages = with pkgs; [ cargo-expand cargo-tauri sea-orm-cli ];
 
   scripts.tauri.exec = ''
     (
@@ -46,6 +47,16 @@
     esac
 
     DATABASE_URL="sqlite://$DB_PATH?mode=rwc" ${pkgs.lib.getExe pkgs.sea-orm-cli} "$@"
+  '';
+
+  scripts.update-submodules.exec = ''
+    (
+      # change working directory to git toplevel
+      cd "$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)"
+      # update and apply patch to xtaskops
+      ${pkgs.lib.getExe pkgs.git} submodule update --remote vendors/xtaskops
+      ${pkgs.lib.getExe pkgs.git} apply vendors/patches/xtaskops_ci_args.patch
+    )
   '';
 
   # TODO: add a script to generate code coverage
