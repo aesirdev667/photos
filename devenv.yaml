@@ -1,0 +1,10 @@
+allowUnfree: true
+inputs:
+  nixpkgs:
+    url: github:nixos/nixpkgs/release-24.11
+  nixpkgs-unstable:
+    url: github:nixos/nixpkgs/nixpkgs-unstable
+  devenv:
+    url: github:cachix/devenv
+  fenix:
+    url: github:nix-community/fenix

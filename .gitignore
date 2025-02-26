@@ -7,3 +7,9 @@
 # cargo
 debug/
 target/
+
+# git-hooks
+.pre-commit-config.yaml
+
+# coverage
+coverage
