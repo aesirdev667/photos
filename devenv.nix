@@ -27,6 +27,7 @@ in
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     glib
     gtk3
+    openssl
   ];
 
   git-hooks.hooks = {
