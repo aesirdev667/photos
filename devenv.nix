@@ -26,6 +26,7 @@ in
     sea-orm-cli
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     glib
+    gtk3
   ];
 
   git-hooks.hooks = {
