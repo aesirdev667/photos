@@ -6,7 +6,7 @@ macro_rules! background_job {
                 let job = store.enqueue(stringify!($func), payload.clone()).await?;
 
                 tokio::spawn(async move {
-                    match $func(payload).await {
+                    match $func(store.clone(), payload).await {
                         Ok(_) => store.update_status(job.id, JobStatus::Completed, None).await,
                         Err(e) => store.update_status(job.id, JobStatus::Failed, Some(e.to_string())).await,
                     }

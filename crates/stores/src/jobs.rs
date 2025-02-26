@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct JobStore {
-    db: Arc<DatabaseConnection>,
+    pub db: Arc<DatabaseConnection>,
 }
 
 impl JobStore {
@@ -20,8 +20,6 @@ impl JobStore {
         }
     }
 
-    /// # Errors
-    /// Errors on database issues.
     pub async fn find_by_id(&self, id: i32) -> Result<Option<jobs::Model>, DbErr> {
         Job::find()
             .filter(jobs::Column::Id.eq(id))
@@ -29,8 +27,6 @@ impl JobStore {
             .await
     }
 
-    /// # Errors
-    /// Errors on database issues.
     pub async fn enqueue(&self, job_type: &str, payload: String) -> Result<jobs::Model, DbErr> {
         let job = jobs::ActiveModel {
             job_type: Set(job_type.to_string()),
@@ -45,10 +41,6 @@ impl JobStore {
         Job::insert(job).exec_with_returning(&*self.db).await
     }
 
-    /// # Errors
-    /// Errors on database issues.
-    /// # Panics
-    /// Shouldn't panic because we check if `job.is_none` before we unwrap.
     pub async fn update_status(
         &self,
         job_id: i32,

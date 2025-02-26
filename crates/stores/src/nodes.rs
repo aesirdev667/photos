@@ -17,8 +17,6 @@ impl NodeStore {
         Self { db: db.clone() }
     }
 
-    /// # Errors
-    /// Errors on database issues.
     pub async fn find_by_path(&self, path: String) -> Result<Option<nodes::Model>, DbErr> {
         Node::find()
             .filter(nodes::Column::Path.eq(path))
@@ -26,8 +24,6 @@ impl NodeStore {
             .await
     }
 
-    /// # Errors
-    /// Errors on database issues.
     pub async fn with_children(&self, path: String) -> Result<Option<nodes::Model>, DbErr> {
         let all_nodes: Vec<nodes::Model> = Node::find()
             .from_raw_sql(Statement::from_sql_and_values(
@@ -101,8 +97,6 @@ impl NodeStore {
         Ok(node_map.values().find(|v| v.path == path).cloned())
     }
 
-    /// # Errors
-    /// Errors on database issues.
     pub async fn create(
         &self,
         path: String,

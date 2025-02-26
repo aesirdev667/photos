@@ -5,31 +5,30 @@ use crate::error::Error;
 use crate::state::App;
 
 use entities::nodes::{Model as Node, NodeType};
+use entities::jobs::{Model as Job};
 use stores::nodes::NodeStore;
+use stores::jobs::JobStore;
 
-/// Module name repitition allowed here because the UI calls it with `library_open`.
 #[allow(clippy::module_name_repetitions)]
 #[tauri::command]
-pub async fn library_open(path: String, state: tauri::State<'_, App>) -> Result<Node, Error> {
+pub async fn library_open(path: String, state: tauri::State<'_, App>) -> Result<Node | Job, Error> {
     println!("command `library_open` called");
 
     let store = NodeStore::new(state.db());
-    let mut root_node = store.with_children(path.clone()).await?;
+    let node = store.with_children(path.clone()).await?;
 
-    if root_node.is_none() {
-        let _ = index_path(&store, PathBuf::from(path.clone())).await;
-        root_node = store.find_by_path(path.clone()).await?;
-
-        if root_node.is_none() {
-            eprintln!("Path `{path}` not found.");
-            return Err(Error::Io(std::io::Error::other("Path not found")));
-        }
+    if node.is_some() {
+        return Ok(root_node.unwrap());
     }
 
-    Ok(root_node.unwrap())
+    let job_store = JobStore::new(state.db());
+    let job = index_path_job(job_store.clone(), path).await?;
+
+    Ok(job)
 }
 
-async fn index_path(store: &NodeStore, path: PathBuf) -> Result<(), Error> {
+async fn index_path(store: JobStore, path: String) -> Result<(), Error> {
+    let store = NodeStore::new(store.db());
     let mut queue = VecDeque::new();
     queue.push_back((path, None));
 
@@ -51,6 +50,7 @@ async fn index_path(store: &NodeStore, path: PathBuf) -> Result<(), Error> {
 
     Ok(())
 }
+background_job! { index_path }
 
 async fn create_node(
     store: &NodeStore,

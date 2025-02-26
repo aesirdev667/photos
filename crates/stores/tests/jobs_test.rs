@@ -1,20 +1,28 @@
 use entities::jobs::{self, JobStatus};
+use entities::nodes::Model as Node;
 use migrations::DbErr;
 use stores::background_job;
 use stores::jobs::JobStore;
+use stores::nodes::NodeStore;
 use tokio::time::{sleep, Duration};
 
 mod test_helpers;
 
-async fn example_task(payload: String) -> Result<(), String> {
+async fn example_task(store: JobStore, path: String) -> Result<Option<Node>, String> {
     sleep(Duration::from_secs(1)).await;
 
-    if payload.contains("error") {
-        return Err(format!("An error happened: {payload}"));
+    if path.contains("error") {
+        return Err(format!("An error happened: {path}"));
     }
 
-    println!("Processing payload: {}", payload);
-    Ok(())
+    let store = NodeStore::new(&store.db);
+    let node = store
+        .find_by_path(path.clone())
+        .await
+        .expect("Can't query store");
+
+    println!("Processing payload: {path}");
+    Ok(node)
 }
 background_job! { example_task }
 
