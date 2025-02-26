@@ -28,6 +28,7 @@ in
     glib
     gtk3
     openssl
+    webkitgtk_4_1
   ];
 
   git-hooks.hooks = {
