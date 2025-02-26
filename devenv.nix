@@ -19,7 +19,14 @@ in
   languages.rust.channel = "stable";
   languages.rust.components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "llvm-tools-preview" ];
 
-  packages = with pkgs; [ cargo-expand cargo-tauri cargo-watch sea-orm-cli ];
+  packages = with pkgs; [
+    cargo-expand
+    cargo-tauri
+    cargo-watch
+    sea-orm-cli
+  ] ++ lib.optionals pkgs.stdenv.isLinux [
+    glib
+  ];
 
   git-hooks.hooks = {
     cargo-check.enable = true;
