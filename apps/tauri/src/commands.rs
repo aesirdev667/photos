@@ -1,28 +1,36 @@
+use entities::jobs::Model as Job;
 use entities::nodes::Model as Node;
 use stores::nodes::NodeStore;
 
 use crate::error::Error;
+use crate::jobs::index_path_job;
 use crate::state::App;
-use tauri::State;
+
+use serde::Serialize;
+use tauri::{AppHandle, Runtime, State};
+
+#[derive(Debug, Clone, Serialize)]
+pub enum LibraryOpenResult {
+    Node(Node),
+    Job(Job),
+}
 
 #[tauri::command]
-pub async fn library_open(path: String, state: State<'_, App>) -> Result<Node, Error> {
+pub async fn library_open<R: Runtime>(
+    app_handle: AppHandle<R>,
+    path: String,
+    state: State<'_, App>,
+) -> Result<LibraryOpenResult, Error> {
     println!("command `library_open` called");
 
     let store = NodeStore::new(state.db());
-    let root_node = store.with_children(path.clone()).await?;
+    let node = store.with_children(path.clone()).await?;
 
-    // if root_node.is_none() {
-    //     /// add index job
-    //     /// return index job
-    //     let _ = index_path(&store, PathBuf::from(path.clone())).await;
-    //     root_node = store.find_by_path(path.clone()).await?;
-    //
-    //     if root_node.is_none() {
-    //         eprintln!("Path `{path}` not found.");
-    //         return Err(Error::Io(std::io::Error::other("Path not found")));
-    //     }
-    // }
+    if let Some(node) = node {
+        return Ok(LibraryOpenResult::Node(node));
+    }
 
-    Ok(root_node.unwrap())
+    let job = index_path_job(app_handle.clone(), path).await?;
+
+    Ok(LibraryOpenResult::Job(job))
 }

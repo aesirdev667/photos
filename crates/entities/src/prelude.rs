@@ -2,3 +2,5 @@
 
 pub use super::jobs::Entity as Job;
 pub use super::nodes::Entity as Node;
+
+pub use sea_orm::ActiveValue::{NotSet, Set};

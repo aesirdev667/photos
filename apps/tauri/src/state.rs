@@ -1,4 +1,5 @@
 use std::{path::PathBuf, sync::Arc};
+use tauri;
 
 use migrations::{DatabaseConnection, DbErr, Migrator, MigratorTrait};
 
@@ -9,7 +10,7 @@ pub struct App {
 
 impl App {
     #[allow(clippy::future_not_send)]
-    pub async fn new(app: &tauri::App) -> Result<Self, DbErr> {
+    pub async fn new<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<Self, DbErr> {
         let db_path = Self::get_db_path(app);
         let db_url = format!("sqlite://{}?mode=rwc", db_path.display());
 
@@ -33,7 +34,7 @@ impl App {
     }
 
     #[cfg(test)]
-    fn get_db_path(_app: &tauri::App) -> PathBuf {
+    fn get_db_path<R: tauri::Runtime>(_app: &tauri::App<R>) -> PathBuf {
         use tempfile::tempdir;
 
         static TEMP_DIR: std::sync::OnceLock<tempfile::TempDir> = std::sync::OnceLock::new();
@@ -42,7 +43,7 @@ impl App {
     }
 
     #[cfg(not(test))]
-    fn get_db_path(app: &tauri::App) -> PathBuf {
+    fn get_db_path<R: tauri::Runtime>(app: &tauri::App<R>) -> PathBuf {
         use std::fs;
         use tauri::Manager;
 
@@ -51,25 +52,3 @@ impl App {
         app_dir.join("photos.db")
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use tauri::test::{mock_builder, mock_context, noop_assets};
-//
-//     #[tokio::test]
-//     async fn test_database_init() {
-//         let app = mock_builder().build(mock_context(noop_assets())).unwrap();
-//         let state = AppState::new(&app).await;
-//         assert!(state.is_ok(), "Should initialize AppState");
-//
-//         let state = state.unwrap();
-//         let result = state.db.execute(sea_orm::Statement::from_string(
-//             sea_orm::DatabaseBackend::Sqlite,
-//             "SELECT 1".to_string()
-//         )).await;
-//
-//         assert!(result.is_ok(), "Should be able to query database");
-//     }
-//
-// }

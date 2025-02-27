@@ -1,10 +1,12 @@
 use tauri::{Builder, Manager, async_runtime, generate_context, generate_handler};
 
-mod commands;
-mod error;
-mod state;
+pub mod commands;
+pub mod error;
+pub mod jobs;
+pub mod macros;
+pub mod processors;
+pub mod state;
 
-#[allow(clippy::missing_panics_doc)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[allow(clippy::large_stack_frames)]

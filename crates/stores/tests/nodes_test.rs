@@ -1,22 +1,8 @@
-use entities::nodes::{self, NodeType};
-// use migrations::DbErr;
-// use stores::background_job;
+use entities::nodes::{ActiveModel, NodeType};
+use entities::prelude::*;
 use stores::nodes::NodeStore;
-// use tokio::time::{sleep, Duration};
 
 mod test_helpers;
-
-// async fn example_task(payload: String) -> Result<(), String> {
-//     sleep(Duration::from_secs(1)).await;
-//
-//     if payload.contains("error") {
-//         return Err(format!("An error happened: {payload}"));
-//     }
-//
-//     println!("Processing payload: {}", payload);
-//     Ok(())
-// }
-// background_job! { example_task }
 
 #[tokio::test]
 async fn test_with_children() {
@@ -25,50 +11,59 @@ async fn test_with_children() {
         .expect("Db connection failed");
     let store = NodeStore::new(&connection);
 
+    let mut node = ActiveModel {
+        id: NotSet,
+        path: Set("/".to_string()),
+        size: Set(12i32),
+        node_type: Set(NodeType::Directory),
+        parent_id: Set(None),
+        created_at: Set(chrono::Utc::now()),
+        updated_at: Set(chrono::Utc::now()),
+    };
     let root = store
-        .create("/".to_string(), 12i32, NodeType::Directory, None)
+        .save(node.clone())
         .await
-        .expect("Couldn't create root node");
+        .expect("Couldn't save root node");
+
+    node.path = Set("/file.txt".to_string());
+    node.size = Set(122i32);
+    node.node_type = Set(NodeType::File);
+    node.parent_id = Set(Some(root.id));
 
     let _child_file = store
-        .create(
-            "/file.txt".to_string(),
-            122i32,
-            NodeType::File,
-            Some(root.id),
-        )
+        .save(node.clone())
         .await
-        .expect("Couldn't create child file node");
+        .expect("Couldn't save child file node");
+
+    node.path = Set("/folder".to_string());
+    node.size = Set(12i32);
+    node.node_type = Set(NodeType::Directory);
+    node.parent_id = Set(Some(root.id));
 
     let child_folder = store
-        .create(
-            "/folder".to_string(),
-            12i32,
-            NodeType::Directory,
-            Some(root.id),
-        )
+        .save(node.clone())
         .await
-        .expect("Couldn't create child folder node");
+        .expect("Couldn't save child folder node");
+
+    node.path = Set("/folder_two".to_string());
+    node.size = Set(12i32);
+    node.node_type = Set(NodeType::Directory);
+    node.parent_id = Set(Some(root.id));
 
     let _child_folder_two = store
-        .create(
-            "/folder_two".to_string(),
-            12i32,
-            NodeType::Directory,
-            Some(root.id),
-        )
+        .save(node.clone())
         .await
-        .expect("Couldn't create second child folder node");
+        .expect("Couldn't save second child folder node");
+
+    node.path = Set("/folder/file.txt".to_string());
+    node.size = Set(122i32);
+    node.node_type = Set(NodeType::File);
+    node.parent_id = Set(Some(child_folder.id));
 
     let _child_folder_file = store
-        .create(
-            "/folder/file.txt".to_string(),
-            122i32,
-            NodeType::File,
-            Some(child_folder.id),
-        )
+        .save(node)
         .await
-        .expect("Couldn't create child folder file node");
+        .expect("Couldn't save child folder file node");
 
     let tree = store
         .with_children("/".to_string())
@@ -86,4 +81,35 @@ async fn test_with_children() {
             .len(),
         1
     );
+}
+
+#[tokio::test]
+async fn test_update_node() {
+    let connection = test_helpers::setup_test_db()
+        .await
+        .expect("Db connection failed");
+    let store = NodeStore::new(&connection);
+
+    let mut node = ActiveModel {
+        id: NotSet,
+        path: Set("/".to_string()),
+        size: Set(12i32),
+        node_type: Set(NodeType::Directory),
+        parent_id: Set(None),
+        created_at: Set(chrono::Utc::now()),
+        updated_at: Set(chrono::Utc::now()),
+    };
+
+    let root = store.save(node.clone()).await.expect("Couldn't save node");
+
+    node.id = Set(root.id);
+    node.size = Set(155i32);
+    node.updated_at = Set(chrono::Utc::now());
+
+    let updated = store
+        .save(node.clone())
+        .await
+        .expect("Couldn't update node");
+
+    assert_eq!(updated.updated_at, node.updated_at.unwrap())
 }

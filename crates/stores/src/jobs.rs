@@ -20,10 +20,14 @@ impl JobStore {
         }
     }
 
+    pub fn db(&self) -> &DatabaseConnection {
+        &self.db
+    }
+
     pub async fn find_by_id(&self, id: i32) -> Result<Option<jobs::Model>, DbErr> {
         Job::find()
             .filter(jobs::Column::Id.eq(id))
-            .one(&*self.db)
+            .one(self.db())
             .await
     }
 
@@ -38,7 +42,7 @@ impl JobStore {
             ..Default::default()
         };
 
-        Job::insert(job).exec_with_returning(&*self.db).await
+        Job::insert(job).exec_with_returning(self.db()).await
     }
 
     pub async fn update_status(
@@ -47,7 +51,7 @@ impl JobStore {
         status: jobs::JobStatus,
         error: Option<String>,
     ) -> Result<jobs::Model, DbErr> {
-        let job = Job::find_by_id(job_id).one(&*self.db).await?;
+        let job = Job::find_by_id(job_id).one(self.db()).await?;
 
         if job.is_none() {
             return Err(DbErr::Custom(format!("Can't find job with id '{job_id}'")));
@@ -59,7 +63,7 @@ impl JobStore {
         job.updated_at = Set(Utc::now());
         job.error = Set(error.clone());
 
-        let job = job.update(&*self.db).await?;
+        let job = job.update(self.db()).await?;
 
         Ok(job)
     }

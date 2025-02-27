@@ -1,10 +1,9 @@
-use entities::nodes;
-use entities::prelude::*;
+use entities::nodes::{ActiveModel, Entity, Model as Node, NodeType};
 use migrations::{DatabaseConnection, DbErr};
 
-use sea_orm::{
-    ActiveValue::Set, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Statement,
-};
+use sea_orm::prelude::*;
+use sea_orm::Statement;
+
 use std::collections::HashMap;
 
 pub struct NodeStore {
@@ -17,15 +16,8 @@ impl NodeStore {
         Self { db: db.clone() }
     }
 
-    pub async fn find_by_path(&self, path: String) -> Result<Option<nodes::Model>, DbErr> {
-        Node::find()
-            .filter(nodes::Column::Path.eq(path))
-            .one(&self.db)
-            .await
-    }
-
-    pub async fn with_children(&self, path: String) -> Result<Option<nodes::Model>, DbErr> {
-        let all_nodes: Vec<nodes::Model> = Node::find()
+    pub async fn with_children(&self, path: String) -> Result<Option<Node>, DbErr> {
+        let all_nodes: Vec<Node> = Entity::find()
             .from_raw_sql(Statement::from_sql_and_values(
                 self.db.get_database_backend(),
                 r"
@@ -49,13 +41,13 @@ impl NodeStore {
             .await?;
 
         // Create initial map of all nodes
-        let mut node_map: HashMap<i32, nodes::Model> =
+        let mut node_map: HashMap<i32, Node> =
             all_nodes.into_iter().map(|node| (node.id, node)).collect();
 
         // First, move all files to their parent directories
         let file_ids: Vec<i32> = node_map
             .values()
-            .filter(|node| node.node_type == nodes::NodeType::File)
+            .filter(|node| node.node_type == NodeType::File)
             .map(|node| node.id)
             .collect();
 
@@ -72,7 +64,7 @@ impl NodeStore {
         // Then move directories to their parents, starting from the deepest
         let mut dir_ids: Vec<i32> = node_map
             .values()
-            .filter(|node| node.node_type == nodes::NodeType::Directory && node.path != path)
+            .filter(|node| node.node_type == NodeType::Directory && node.path != path)
             .map(|node| node.id)
             .collect();
 
@@ -97,23 +89,11 @@ impl NodeStore {
         Ok(node_map.values().find(|v| v.path == path).cloned())
     }
 
-    pub async fn create(
-        &self,
-        path: String,
-        size: i32,
-        node_type: nodes::NodeType,
-        parent_id: Option<i32>,
-    ) -> Result<nodes::Model, DbErr> {
-        let new_node = nodes::ActiveModel {
-            path: Set(path.clone()),
-            size: Set(size),
-            node_type: Set(node_type.clone()),
-            parent_id: Set(parent_id),
-            updated_at: Set(chrono::Utc::now()),
-            created_at: Set(chrono::Utc::now()),
-            ..Default::default()
-        };
-
-        Node::insert(new_node).exec_with_returning(&self.db).await
+    pub async fn save(&self, node: ActiveModel) -> Result<Node, DbErr> {
+        if node.id.is_set() {
+            Ok(Entity::update(node).exec(&self.db).await?)
+        } else {
+            Ok(Entity::insert(node).exec_with_returning(&self.db).await?)
+        }
     }
 }

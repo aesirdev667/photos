@@ -1,4 +1,3 @@
-
 use std::{collections::VecDeque, fs, path::PathBuf};
 
 use crate::error::Error;
@@ -37,6 +36,7 @@ async fn index_path(store: JobStore, path: String) -> Result<(), Error> {
             if node.node_type == NodeType::Directory {
                 if let Ok(entries) = fs::read_dir(current_path.clone()) {
                     for entry in entries.flatten() {
+                        // only index files directories and files that we support
                         queue.push_back((entry.path(), Some(node.clone())));
                     }
                 } else {
