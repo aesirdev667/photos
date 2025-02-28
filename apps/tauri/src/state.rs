@@ -21,7 +21,7 @@ impl App {
 
         println!("Running database migrations...");
         Migrator::up(&connection, None).await?;
-        println!("Migrations completed sucessfully");
+        println!("Migrations completed successfully");
         println!("-----------------------------------------------");
 
         Ok(Self {

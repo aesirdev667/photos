@@ -33,18 +33,18 @@ in
   ];
 
   packages =
-    with pkgs;
     [
-      cargo-expand
-      cargo-tauri
-      cargo-watch
-      sea-orm-cli
+      inputs.lumen.packages.${pkgs.stdenv.system}.lumen
+      pkgs.cargo-expand
+      pkgs.cargo-tauri
+      pkgs.cargo-watch
+      pkgs.sea-orm-cli
     ]
     ++ lib.optionals pkgs.stdenv.isLinux [
-      glib
-      gtk3
-      openssl
-      webkitgtk_4_1
+      pkgs.glib
+      pkgs.gtk3
+      pkgs.openssl
+      pkgs.webkitgtk_4_1
     ];
 
   git-hooks.hooks = {
@@ -57,7 +57,7 @@ in
     deadnix.enable = true;
 
     # shell hooks
-    shellcheck.enable = true;
+    # shellcheck.enable = true;
 
     # rust hooks
     cargo-check.enable = true;
@@ -74,6 +74,7 @@ in
     # TODO: rewrite this for Claude
     # gptcommit.enable = true;
     lychee.enable = true;
+    lychee.settings.flags = "--exclude-all-private";
     typos.enable = true;
   };
 

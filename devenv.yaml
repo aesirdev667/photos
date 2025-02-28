@@ -8,3 +8,5 @@ inputs:
     url: github:cachix/devenv
   fenix:
     url: github:nix-community/fenix
+  lumen:
+    url: github:jnsahaj/lumen
