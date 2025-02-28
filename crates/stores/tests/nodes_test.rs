@@ -17,8 +17,8 @@ async fn test_with_children() {
         size: Set(12i32),
         node_type: Set(NodeType::Directory),
         parent_id: Set(None),
-        created_at: Set(chrono::Utc::now()),
-        updated_at: Set(chrono::Utc::now()),
+        created: Set(chrono::Utc::now()),
+        modified: Set(chrono::Utc::now()),
     };
     let root = store
         .save(node.clone())
@@ -96,20 +96,20 @@ async fn test_update_node() {
         size: Set(12i32),
         node_type: Set(NodeType::Directory),
         parent_id: Set(None),
-        created_at: Set(chrono::Utc::now()),
-        updated_at: Set(chrono::Utc::now()),
+        created: Set(chrono::Utc::now()),
+        modified: Set(chrono::Utc::now()),
     };
 
     let root = store.save(node.clone()).await.expect("Couldn't save node");
 
     node.id = Set(root.id);
     node.size = Set(155i32);
-    node.updated_at = Set(chrono::Utc::now());
+    node.modified = Set(chrono::Utc::now());
 
     let updated = store
         .save(node.clone())
         .await
         .expect("Couldn't update node");
 
-    assert_eq!(updated.updated_at, node.updated_at.unwrap())
+    assert_eq!(updated.modified, node.modified.unwrap())
 }

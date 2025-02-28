@@ -23,8 +23,8 @@ impl MigrationTrait for Migration {
                     ))
                     .col(string(Jobs::Payload))
                     .col(string_null(Jobs::Error))
-                    .col(timestamp(Jobs::CreatedAt))
-                    .col(timestamp(Jobs::UpdatedAt))
+                    .col(timestamp(Jobs::Created))
+                    .col(timestamp(Jobs::Modified))
                     .to_owned(),
             )
             .await?;
@@ -78,8 +78,8 @@ enum Jobs {
     Status,
     Payload,
     Error,
-    CreatedAt,
-    UpdatedAt,
+    Created,
+    Modified,
 }
 
 #[derive(Iden, EnumIter)]

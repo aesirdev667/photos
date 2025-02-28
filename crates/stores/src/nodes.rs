@@ -22,13 +22,13 @@ impl NodeStore {
                 self.db.get_database_backend(),
                 r"
                 WITH RECURSIVE NodeTree AS (
-                    SELECT id, path, size, node_type, parent_id, created_at, updated_at
+                    SELECT id, path, size, node_type, parent_id, created, modified
                     FROM nodes
                     WHERE path = $1
 
                     UNION ALL
 
-                    SELECT n.id, n.path, n.size, n.node_type, n.parent_id, n.created_at, n.updated_at
+                    SELECT n.id, n.path, n.size, n.node_type, n.parent_id, n.created, n.modified
                     FROM nodes n
                     JOIN NodeTree nt ON n.parent_id = nt.id
                 )

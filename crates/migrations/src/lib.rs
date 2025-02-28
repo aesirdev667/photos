@@ -6,13 +6,11 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20250220_191902_create_nodes_table;
 mod m20250224_085202_create_jobs_table;
+mod m20250228_051742_create_metadata_table;
 
 pub struct Migrator;
 
 impl Migrator {
-    /// # Errors
-    ///
-    /// Will return `DbErr` if `db_url` can not be connected to.
     pub async fn connection(db_url: String) -> Result<DatabaseConnection, DbErr> {
         let mut opt = ConnectOptions::new(db_url);
 
@@ -35,6 +33,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20250220_191902_create_nodes_table::Migration),
             Box::new(m20250224_085202_create_jobs_table::Migration),
+            Box::new(m20250228_051742_create_metadata_table::Migration),
         ]
     }
 }

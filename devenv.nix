@@ -1,4 +1,10 @@
-{ inputs, lib, pkgs, config, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 
 let
   unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
@@ -17,29 +23,58 @@ in
 
   languages.rust.enable = true;
   languages.rust.channel = "stable";
-  languages.rust.components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "llvm-tools-preview" ];
-
-  packages = with pkgs; [
-    cargo-expand
-    cargo-tauri
-    cargo-watch
-    sea-orm-cli
-  ] ++ lib.optionals pkgs.stdenv.isLinux [
-    glib
-    gtk3
-    openssl
-    webkitgtk_4_1
+  languages.rust.components = [
+    "rustc"
+    "cargo"
+    "clippy"
+    "rustfmt"
+    "rust-analyzer"
+    "llvm-tools-preview"
   ];
 
+  packages =
+    with pkgs;
+    [
+      cargo-expand
+      cargo-tauri
+      cargo-watch
+      sea-orm-cli
+    ]
+    ++ lib.optionals pkgs.stdenv.isLinux [
+      glib
+      gtk3
+      openssl
+      webkitgtk_4_1
+    ];
+
   git-hooks.hooks = {
+    # markdown hooks
+    markdownlint.enable = true;
+    mdsh.enable = true;
+
+    # nix hooks
+    nixfmt-rfc-style.enable = true;
+    deadnix.enable = true;
+
+    # shell hooks
+    shellcheck.enable = true;
+
+    # rust hooks
     cargo-check.enable = true;
-    check-added-large-files.enable = true;
-    check-case-conflicts.enable = true;
     clippy.enable = true;
     clippy.settings.denyWarnings = true;
     rustfmt.enable = true;
     rustfmt.settings.all = true;
     rustfmt.settings.check = true;
+
+    # general hooks
+    check-added-large-files.enable = true;
+    check-case-conflicts.enable = true;
+    # convco.enable = true;
+    # TODO: rewrite this for Claude
+    # gptcommit.enable = true;
+    lychee.enable = true;
+    typos.enable = true;
   };
 
   scripts = {
@@ -52,6 +87,24 @@ in
       echo "$WORK_DIR"
     '';
 
+    db_url.exec = ''
+      app_id="$(jq -r .identifier < "$(workdir)/apps/tauri/tauri.conf.json")"
+      db_name="photos.db"
+
+      case "$(uname -s)" in
+        Darwin*)
+          db_path="$HOME/Library/Application Support/$app_id/$db_name"
+          ;;
+        Linux*)
+          db_path="$HOME/.local/share/$app_id/$db_name"
+          ;;
+        MINGW*|CYGWIN*|MSYS*)
+          db_path="$APPDATA\\$app_id\\$db_name"
+          ;;
+      esac
+      echo "sqlite://$db_path?mode=rwc"
+    '';
+
     nuxi.exec = ''
       (
         cd "$(workdir)/apps/ui" || { echo "Failed to cd to $(workdir)/apps/ui"; exit 1; }
@@ -62,7 +115,7 @@ in
     tauri.exec = ''
       (
         cd "$(workdir)" || { echo "Failed to cd to $(workdir)"; exit 1; }
-        ${lib.getExe pkgs.cargo-tauri} "$@" || { echo "Failed to excute 'cargo-tauri $*'"; exit 1; }
+        ${lib.getExe pkgs.cargo-tauri} "$@" || { echo "Failed to execute 'cargo-tauri $*'"; exit 1; }
       )
     '';
 
@@ -75,29 +128,6 @@ in
   };
 
   tasks = {
-    "photos:dbUrl" = {
-      exec = ''
-        app_id="$(jq -r .identifier < "$(workdir)/apps/tauri/tauri.conf.json")"
-        db_name="photos.db"
-
-        case "$(uname -s)" in
-          Darwin*)
-            db_path="$HOME/Library/Application Support/$app_id/$db_name"
-            ;;
-          Linux*)
-            db_path="$HOME/.local/share/$app_id/$db_name"
-            ;;
-          MINGW*|CYGWIN*|MSYS*)
-            db_path="$APPDATA\\$app_id\\$db_name"
-            ;;
-        esac
-
-        export DATABASE_URL="sqlite://$db_path?mode=rwc"
-      '';
-      exports = [ "DATABASE_URL" ];
-      before = [ "devenv:enterShell" ];
-    };
-
     "photos:coverage" = {
       exec = ''
         (
@@ -148,11 +178,15 @@ in
     };
   };
 
+  enterShell = ''
+    export DATABASE_URL="$(db_url)"
+  '';
+
   test = pkgs.writeShellScript "devenv-test" ''
     # FIX: we don't want it to run `enterShell` twice
     # echo "• Setting up shell environment ..."
     # ${config.enterShell}
-
+    export DATABASE_URL="$(db_url)"
     set -euo pipefail
     echo "• Testing ..."
     ${config.enterTest}

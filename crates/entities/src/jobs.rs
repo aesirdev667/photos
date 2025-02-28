@@ -10,8 +10,8 @@ pub struct Model {
     pub status: JobStatus,
     pub payload: String,
     pub error: Option<String>,
-    pub created_at: DateTimeUtc,
-    pub updated_at: DateTimeUtc,
+    pub created: DateTimeUtc,
+    pub modified: DateTimeUtc,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]

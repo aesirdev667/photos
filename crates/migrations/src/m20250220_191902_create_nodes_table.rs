@@ -23,8 +23,8 @@ impl MigrationTrait for Migration {
                         NodeType::iter(),
                     ))
                     .col(integer_null(Nodes::ParentId))
-                    .col(timestamp(Nodes::CreatedAt))
-                    .col(timestamp(Nodes::UpdatedAt))
+                    .col(timestamp(Nodes::Created))
+                    .col(timestamp(Nodes::Modified))
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-node-parent")
@@ -77,15 +77,15 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Nodes {
+pub enum Nodes {
     Table,
     Id,
     Path,
     Size,
     NodeType,
     ParentId,
-    CreatedAt,
-    UpdatedAt,
+    Created,
+    Modified,
 }
 
 #[derive(Iden, EnumIter)]

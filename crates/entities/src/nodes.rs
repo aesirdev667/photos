@@ -10,8 +10,8 @@ pub struct Model {
     pub size: i32,
     pub node_type: NodeType,
     pub parent_id: Option<i32>,
-    pub created_at: DateTimeUtc,
-    pub updated_at: DateTimeUtc,
+    pub created: DateTimeUtc,
+    pub modified: DateTimeUtc,
 
     #[sea_orm(ignore)]
     #[serde(skip_deserializing, default)]

@@ -21,8 +21,8 @@ impl NodeProcessor {
         let is_dir = metadata.is_dir();
 
         let size: i32 = metadata.len().try_into()?;
-        let created_at = metadata.created()?.into();
-        let updated_at = metadata.modified()?.into();
+        let created = metadata.created()?.into();
+        let modified = metadata.modified()?.into();
 
         let node_type = if is_dir {
             NodeType::Directory
@@ -41,8 +41,8 @@ impl NodeProcessor {
             size: Set(size),
             node_type: Set(node_type),
             parent_id: Set(parent_id),
-            created_at: Set(created_at),
-            updated_at: Set(updated_at),
+            created: Set(created),
+            modified: Set(modified),
         };
 
         Ok(self.store.save(node).await?)

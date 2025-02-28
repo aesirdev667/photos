@@ -36,8 +36,8 @@ impl JobStore {
             job_type: Set(job_type.to_string()),
             status: Set(jobs::JobStatus::Pending.clone()),
             payload: Set(payload.clone()),
-            updated_at: Set(Utc::now()),
-            created_at: Set(Utc::now()),
+            created: Set(Utc::now()),
+            modified: Set(Utc::now()),
             error: Set(None),
             ..Default::default()
         };
@@ -60,7 +60,7 @@ impl JobStore {
         let mut job: jobs::ActiveModel = job.unwrap().into();
 
         job.status = Set(status.clone());
-        job.updated_at = Set(Utc::now());
+        job.modified = Set(Utc::now());
         job.error = Set(error.clone());
 
         let job = job.update(self.db()).await?;
